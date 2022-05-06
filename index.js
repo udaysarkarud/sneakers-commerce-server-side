@@ -3,7 +3,10 @@ const { MongoClient } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
-const ObjectId = require('mongodb').ObjectId
+const ObjectId = require('mongodb').ObjectId;
+const stripe = require("stripe")(`${process.env.STRIPE_BKSECRET}`);
+const nodemailer = require("nodemailer");
+
 const port = process.env.PORT || 5000;
 
 
@@ -199,6 +202,52 @@ const main = async () => {
             }
 
             res.send(blogsData)
+        })
+        // stripe
+        app.post('/create-payment-intent', async (req, res) => {
+            const paymentInfo = req.body.amount;
+            const totalAmount = paymentInfo * 100;
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: totalAmount,
+                currency: "usd",
+                payment_method_types: ['card']
+            });
+            res.send({ clientSecret: paymentIntent.client_secret });
+
+
+        })
+        // nodemailer
+        app.post('/send-confirmation-email', async (req, res) => {
+            const mailInfo = req.body;
+            console.log(mailInfo)
+
+            const transporter = nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true, // use SSL
+                auth: {
+                    user: `${process.env.NODEMAIL_MAILADD}`,
+                    pass: `${process.env.NODEMAIL_MAILPASS}`
+                }
+            });
+
+            // send mail with defined transport object
+            let info = await transporter.sendMail({
+                from: `${process.env.NODEMAIL_MAILADD}`, // sender address
+                to: `${mailInfo.clientEmail}`, // list of receivers
+                subject: "Order confirmation from sneaker.com", // Subject line
+                text: `Dear ${mailInfo.clientName}, We are happy to let you know that we have received your order.Your order details can be found below. Once your package ships, we will send you an email with a confirm so you can see the movement of your package. Order Number: ${mailInfo.orderId}, Order Date</b>: ${mailInfo.orderDate}</p><p><b>Order Total</b>: ${mailInfo.totalAmount}</p><p><b>Payment ID</b>: ${mailInfo.paymentid}</p><p><b>SHIPPING ADDRESS</b>: ${mailInfo.clientAddress}</p><br/><p>You can review your order status at any time by visiting Your Account. We hope you enjoyed your shopping experience with us and that you will visit us again soon.If you have any questions, contact us here or call us on +8801711227383.We are here to help!</p>`, // plain text body
+                html: `<p>Dear <b>${mailInfo.clientName},</b></p><p>We are happy to let you know that we have received your order.Your order details can be found below. Once your package ships, we will send you an email with a confirm so you can see the movement of your package.</p><br/><p><u>ORDER SUMMARY</u></p><p><b>Order Number:</b> ${mailInfo.orderId}</p><p><b>Order Date</b>: ${mailInfo.orderDate}</p><p><b>Order Total</b>: ${mailInfo.totalAmount}</p><p><b>Payment ID</b>: ${mailInfo.paymentid}</p><p><b>SHIPPING ADDRESS</b>: ${mailInfo.clientAddress}</p><br/><p>You can review your order status at any time by visiting Your Account. We hope you enjoyed your shopping experience with us and that you will visit us again soon.If you have any questions, contact us here or call us on +8801711227383.We are here to help!</p>` // html body
+            }, (error, info) => {
+                if (error) {
+                    console.log('error on sending mail', error)
+                }
+                else {
+                    console.log('email send perfectly', info)
+                }
+            });
+
         })
     }
 
