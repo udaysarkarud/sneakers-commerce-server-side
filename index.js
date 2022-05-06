@@ -225,14 +225,14 @@ const main = async () => {
                 port: 587,
                 secure: false,
                 auth: {
-                    user: 'infomng@sedsbd.org',
-                    pass: 'FtiSoDx7RBv#'
+                    user: `${process.env.NODEMAIL_MAILADD}`,
+                    pass: `${process.env.NODEMAIL_MAILPASS}`
                 }
             });
 
             // send mail with defined transport object
             let info = await transporter.sendMail({
-                from: 'infomng@sedsbd.org', // sender address
+                from: `${process.env.NODEMAIL_MAILADD}`, // sender address
                 to: `${mailInfo.clientEmail}`, // list of receivers
                 subject: "Order confirmation from sneaker.com", // Subject line
                 text: `Dear ${mailInfo.clientName}, We are happy to let you know that we have received your order.Your order details can be found below. Once your package ships, we will send you an email with a confirm so you can see the movement of your package. Order Number: ${mailInfo.orderId}, Order Date</b>: ${mailInfo.orderDate}</p><p><b>Order Total</b>: ${mailInfo.totalAmount}</p><p><b>Payment ID</b>: ${mailInfo.paymentid}</p><p><b>SHIPPING ADDRESS</b>: ${mailInfo.clientAddress}</p><br/><p>You can review your order status at any time by visiting Your Account. We hope you enjoyed your shopping experience with us and that you will visit us again soon.If you have any questions, contact us here or call us on +8801711227383.We are here to help!</p>`, // plain text body
