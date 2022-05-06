@@ -223,8 +223,8 @@ const main = async () => {
             console.log(mailInfo)
 
             const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
+                server: 'premium212.web-hosting.com',
+                port: 587,
                 secure: true, // use SSL
                 auth: {
                     user: `${process.env.NODEMAIL_MAILADD}`,
